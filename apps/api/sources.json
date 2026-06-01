@@ -164,8 +164,8 @@
       "name": "remoteok-public-api",
       "kind": "json",
       "url": "https://remoteok.com/api",
-      "enabled": true,
-      "permission_note": "Public RemoteOK API endpoint."
+      "enabled": false,
+      "permission_note": "Disabled after production requests returned 403. Re-enable only with approved API access."
     }
   ]
 }
