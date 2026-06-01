@@ -81,6 +81,31 @@ Run ingestion:
 curl -X POST http://localhost:8000/ingestion/run
 ```
 
+## Production Deployment
+
+Frontend is deployed on Vercel from `apps/web`.
+
+Backend should be deployed on Railway from `apps/api` using the included Dockerfile. Attach a Railway PostgreSQL service with pgvector support, then set the API environment variables from `.env.example`.
+
+After Railway gives you the backend URL, set this Vercel production variable and redeploy the frontend:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=https://your-railway-api.up.railway.app
+```
+
+Required backend variables:
+
+- `DATABASE_URL`
+- `APP_BASE_URL`
+- `CLERK_JWKS_URL`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_RESUME_BUCKET`
+- `OPENAI_API_KEY`
+- `ANTHROPIC_API_KEY`
+- `SOURCE_CONFIG_PATH`
+- `CRAWLER_USER_AGENT`
+
 ## Compliance
 
 The ingestion layer is source-policy driven. Crawlers are intentionally limited to allowed public APIs, RSS feeds, ATS board endpoints, and career pages whose robots.txt and terms permit collection. Marketplace scraping must be disabled unless a compliant API, partner export, or explicit permission is configured.
