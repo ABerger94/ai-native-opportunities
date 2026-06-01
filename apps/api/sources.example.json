@@ -1,0 +1,20 @@
+{
+  "sources": [
+    {
+      "name": "example-greenhouse-board",
+      "kind": "greenhouse",
+      "url": "https://boards-api.greenhouse.io/v1/boards/YOUR_BOARD_TOKEN/jobs?content=true",
+      "enabled": false,
+      "company_name": "Example Company",
+      "permission_note": "Enable only for boards whose public API use is allowed by the source."
+    },
+    {
+      "name": "example-rss-feed",
+      "kind": "rss",
+      "url": "https://example.com/jobs.rss",
+      "enabled": false,
+      "opportunity_type": "freelance",
+      "permission_note": "Enable only for feeds with permitted reuse and compliant robots.txt."
+    }
+  ]
+}
