@@ -74,6 +74,7 @@ def health_db() -> dict[str, str]:
 def list_opportunities(
     min_ai_score: int = 0,
     limit: int = 50,
+    remote_or_hybrid_only: bool = True,
     db: Session = Depends(get_db),
 ) -> list[Opportunity]:
     stmt = (
@@ -83,6 +84,8 @@ def list_opportunities(
         .order_by(desc(Opportunity.opportunity_score), desc(Opportunity.discovered_at))
         .limit(min(limit, 100))
     )
+    if remote_or_hybrid_only:
+        stmt = stmt.where(Opportunity.remote.is_(True))
     return list(db.scalars(stmt).unique())
 
 
@@ -158,11 +161,11 @@ async def upload_resume(
 
 
 @app.post("/resumes/{resume_id}/match", response_model=list[MatchRead])
-def match_resume(resume_id: UUID, db: Session = Depends(get_db)) -> list[Match]:
+def match_resume(resume_id: UUID, limit: int = 50, db: Session = Depends(get_db)) -> list[Match]:
     resume = db.get(ResumeProfile, resume_id)
     if resume is None:
         raise HTTPException(status_code=404, detail="Resume not found.")
-    opportunities = list(db.scalars(select(Opportunity)))
+    opportunities = list(db.scalars(select(Opportunity).where(Opportunity.remote.is_(True))))
     matches: list[Match] = []
     for opportunity in opportunities:
         values = calculate_match(resume, opportunity)
@@ -187,18 +190,20 @@ def match_resume(resume_id: UUID, db: Session = Depends(get_db)) -> list[Match]:
             .options(joinedload(Match.opportunity).joinedload(Opportunity.company))
             .where(Match.resume_id == resume.id)
             .order_by(desc(Match.overall_match_score))
+            .limit(min(limit, 100))
         ).unique()
     )
 
 
 @app.get("/matches/{resume_id}", response_model=list[MatchRead])
-def list_matches(resume_id: UUID, db: Session = Depends(get_db)) -> list[Match]:
+def list_matches(resume_id: UUID, limit: int = 50, db: Session = Depends(get_db)) -> list[Match]:
     return list(
         db.scalars(
             select(Match)
             .options(joinedload(Match.opportunity).joinedload(Opportunity.company))
             .where(Match.resume_id == resume_id)
             .order_by(desc(Match.overall_match_score))
+            .limit(min(limit, 100))
         ).unique()
     )
 

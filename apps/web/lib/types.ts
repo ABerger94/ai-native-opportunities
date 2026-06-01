@@ -51,3 +51,38 @@ export type Dashboard = {
     message: string;
   };
 };
+
+export type Resume = {
+  id: string;
+  file_name: string;
+  technical_skills: string[];
+  business_skills: string[];
+  leadership_skills: string[];
+  ai_skills: string[];
+  automation_skills: string[];
+  product_skills: string[];
+  startup_skills: string[];
+};
+
+export type Match = {
+  id: string;
+  resume_id: string;
+  opportunity_id: string;
+  overall_match_score: number;
+  skill_match_score: number;
+  experience_match_score: number;
+  ai_readiness_score: number;
+  transition_probability: number;
+  fit_band: string;
+  missing_skills: string[];
+  missing_experience: string[];
+  recommended_certifications: string[];
+  recommended_projects: string[];
+  recommended_portfolio_pieces: string[];
+  explanation: {
+    positive_signals?: string[];
+    needs_improvement?: string[];
+    preparation_time?: string;
+  };
+  opportunity: Opportunity;
+};

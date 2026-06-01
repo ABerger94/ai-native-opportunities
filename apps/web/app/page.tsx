@@ -3,6 +3,7 @@ import { ArrowRight, BriefcaseBusiness, Building2, RefreshCw } from "lucide-reac
 import { getDashboard } from "@/lib/api";
 import { Badge, Score } from "@/components/ui";
 import { DashboardActions } from "@/components/dashboard-actions";
+import { ResumeMatcher } from "@/components/resume-matcher";
 
 export default async function Home() {
   const dashboard = await getDashboard().catch((error: Error) => ({
@@ -24,17 +25,19 @@ export default async function Home() {
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-medium text-primary">AI-native opportunity intelligence</p>
-            <h1 className="mt-1 text-3xl font-semibold tracking-normal">Jobs, contracts, and freelance work where AI is the job</h1>
+            <h1 className="mt-1 text-3xl font-semibold tracking-normal">Remote and hybrid work where AI is the job</h1>
           </div>
           <DashboardActions />
         </div>
       </header>
 
       <section className="mx-auto grid max-w-7xl gap-4 px-6 py-6 md:grid-cols-3">
-        <Metric icon={<BriefcaseBusiness className="h-5 w-5" />} label="Real Opportunities" value={jobs.length} />
+        <Metric icon={<BriefcaseBusiness className="h-5 w-5" />} label="Remote/Hybrid Opportunities" value={jobs.length} />
         <Metric icon={<Building2 className="h-5 w-5" />} label="AI Builder Companies" value={companies.length} />
         <Metric icon={<RefreshCw className="h-5 w-5" />} label="Configured Sources" value={dashboard.configured_source_count ?? 0} />
       </section>
+
+      <ResumeMatcher />
 
       {!dashboard.empty_state.has_real_data ? (
         <section className="mx-auto max-w-7xl px-6">

@@ -136,7 +136,7 @@ def import_opportunity(db: Session, payload: OpportunityIngest) -> Opportunity:
         "title": payload.title,
         "description": payload.description,
         "location": payload.location,
-        "remote": payload.remote,
+        "remote": payload.remote or _is_remote_or_hybrid(payload),
         "opportunity_type": payload.opportunity_type,
         "required_skills": classification.required_skills,
         "preferred_skills": classification.preferred_skills,
@@ -160,6 +160,37 @@ def import_opportunity(db: Session, payload: OpportunityIngest) -> Opportunity:
     opportunity = Opportunity(source=payload.source, external_id=payload.external_id, **values)
     db.add(opportunity)
     return opportunity
+
+
+def _is_remote_or_hybrid(payload: OpportunityIngest) -> bool:
+    haystack = " ".join(
+        [
+            payload.title,
+            payload.description,
+            payload.location or "",
+            str(payload.raw_payload),
+        ]
+    ).lower()
+    positive_signals = [
+        "remote",
+        "hybrid",
+        "work from home",
+        "wfh",
+        "distributed",
+        "anywhere",
+        "work remotely",
+    ]
+    negative_signals = [
+        "not remote",
+        "no remote",
+        "onsite only",
+        "on-site only",
+        "fully onsite",
+        "fully on-site",
+    ]
+    if any(signal in haystack for signal in negative_signals):
+        return False
+    return any(signal in haystack for signal in positive_signals)
 
 
 async def run_ingestion(db: Session) -> IngestionResult:
