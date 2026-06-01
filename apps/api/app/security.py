@@ -1,7 +1,7 @@
 from functools import lru_cache
 
 import jwt
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, Header, HTTPException, Query
 from jwt import PyJWKClient
 
 from app.config import get_settings
@@ -17,10 +17,12 @@ def _jwks_client() -> PyJWKClient | None:
 
 def get_current_user_id(
     authorization: str | None = Header(default=None),
-    local_user_id: str | None = None,
+    local_user_id: str | None = Query(default=None),
 ) -> str:
     settings = get_settings()
     client = _jwks_client()
+    if local_user_id and not authorization:
+        return local_user_id
     if client is None:
         if local_user_id:
             return local_user_id
