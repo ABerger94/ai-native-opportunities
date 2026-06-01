@@ -1,5 +1,6 @@
 from uuid import UUID
 
+import httpx
 import structlog
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +13,7 @@ from app.config import get_settings
 from app.application_agent import build_application_packet
 from app.ingestion import import_opportunity, load_sources, run_ingestion
 from app.matching import calculate_match
-from app.models import Application, Company, Match, Opportunity, ResumeProfile
+from app.models import Application, Company, Match, Opportunity, OpportunityType, ResumeProfile
 from app.resume_parser import extract_skill_groups, extract_text, parse_resume
 from app.schemas import (
     ApplicationRead,
@@ -22,6 +23,8 @@ from app.schemas import (
     MatchRead,
     OpportunityIngest,
     OpportunityRead,
+    RedditImport,
+    RedditSearchResult,
     ResumeRead,
 )
 from app.security import get_current_user_id
@@ -110,6 +113,87 @@ def create_opportunity(payload: OpportunityIngest, db: Session = Depends(get_db)
     db.commit()
     db.refresh(opportunity)
     return opportunity
+
+
+@app.post("/reddit/import", response_model=OpportunityRead)
+def import_reddit_post(payload: RedditImport, db: Session = Depends(get_db)) -> Opportunity:
+    source = f"reddit-{payload.subreddit or 'manual'}".lower().replace("r/", "").replace("/", "-")
+    body = (
+        f"{payload.body}\n\n"
+        f"Source: Reddit"
+        f"{f' / r/{payload.subreddit}' if payload.subreddit else ''}"
+        f"{f' / u/{payload.author}' if payload.author else ''}"
+    )
+    opportunity = import_opportunity(
+        db,
+        OpportunityIngest(
+            source=source,
+            external_id=str(payload.url),
+            url=payload.url,
+            title=payload.title,
+            description=body,
+            company_name=f"Reddit r/{payload.subreddit}" if payload.subreddit else "Reddit Opportunity",
+            location="Remote",
+            remote=True,
+            opportunity_type=OpportunityType.freelance,
+            budget_min=payload.budget_min,
+            budget_max=payload.budget_max,
+            hourly_min=payload.hourly_min,
+            hourly_max=payload.hourly_max,
+            raw_payload=payload.model_dump(mode="json"),
+        ),
+    )
+    db.commit()
+    db.refresh(opportunity)
+    return opportunity
+
+
+@app.get("/reddit/search", response_model=list[RedditSearchResult])
+async def search_reddit(
+    query: str = "AI automation builder paid project",
+    subreddit: str | None = None,
+    limit: int = 10,
+) -> list[RedditSearchResult]:
+    settings = get_settings()
+    if not settings.reddit_bearer_token:
+        raise HTTPException(
+            status_code=501,
+            detail="Reddit API access is not configured. Set REDDIT_BEARER_TOKEN after approved Reddit API access.",
+        )
+    path = f"/r/{subreddit}/search" if subreddit else "/search"
+    params = {
+        "q": query,
+        "sort": "new",
+        "restrict_sr": "1" if subreddit else "0",
+        "limit": str(min(limit, 25)),
+    }
+    async with httpx.AsyncClient(
+        base_url="https://oauth.reddit.com",
+        headers={
+            "Authorization": f"Bearer {settings.reddit_bearer_token}",
+            "User-Agent": settings.crawler_user_agent,
+        },
+    ) as client:
+        response = await client.get(path, params=params, timeout=30)
+        response.raise_for_status()
+    data = response.json()
+    results: list[RedditSearchResult] = []
+    for child in data.get("data", {}).get("children", []):
+        post = child.get("data", {})
+        permalink = post.get("permalink")
+        if not permalink:
+            continue
+        results.append(
+            RedditSearchResult(
+                title=post.get("title", ""),
+                url=f"https://www.reddit.com{permalink}",
+                subreddit=post.get("subreddit"),
+                author=post.get("author"),
+                body=post.get("selftext") or post.get("url") or "",
+                created_utc=post.get("created_utc"),
+            )
+        )
+    return results
 
 
 @app.get("/companies", response_model=list[CompanyRead])

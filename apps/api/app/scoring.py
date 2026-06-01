@@ -27,6 +27,9 @@ AI_TOOLS = {
     "elevenlabs",
     "midjourney",
     "runway",
+    "airtable",
+    "notion",
+    "gohighlevel",
 }
 
 AI_NATIVE_TITLES = {
@@ -57,6 +60,14 @@ AI_BUSINESS_TERMS = {
     "workflow automation",
     "no-code",
     "low-code",
+    "ai builder",
+    "ai builders",
+    "looking for someone",
+    "need someone",
+    "paid project",
+    "hiring",
+    "freelancer",
+    "contractor",
 }
 
 TRADITIONAL_SE_SIGNALS = {

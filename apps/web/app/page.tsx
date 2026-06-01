@@ -5,6 +5,7 @@ import { Badge, Score } from "@/components/ui";
 import { DashboardActions } from "@/components/dashboard-actions";
 import { ResumeMatcher } from "@/components/resume-matcher";
 import { ApplicationTracker } from "@/components/application-tracker";
+import { RedditImporter } from "@/components/reddit-importer";
 
 export default async function Home() {
   const dashboard = await getDashboard().catch((error: Error) => ({
@@ -40,6 +41,7 @@ export default async function Home() {
 
       <ResumeMatcher />
       <ApplicationTracker />
+      <RedditImporter />
 
       {!dashboard.empty_state.has_real_data ? (
         <section className="mx-auto max-w-7xl px-6">

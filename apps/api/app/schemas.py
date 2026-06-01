@@ -80,6 +80,27 @@ class OpportunityIngest(BaseModel):
     raw_payload: dict = {}
 
 
+class RedditImport(BaseModel):
+    url: HttpUrl
+    title: str
+    body: str
+    subreddit: str | None = None
+    author: str | None = None
+    budget_min: float | None = None
+    budget_max: float | None = None
+    hourly_min: float | None = None
+    hourly_max: float | None = None
+
+
+class RedditSearchResult(BaseModel):
+    title: str
+    url: str
+    subreddit: str | None = None
+    author: str | None = None
+    body: str
+    created_utc: float | None = None
+
+
 class ResumeRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

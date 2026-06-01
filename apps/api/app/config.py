@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     supabase_resume_bucket: str = "resumes"
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
+    reddit_bearer_token: str | None = None
     source_config_path: str = "sources.json"
     source_config_json: str | None = None
     crawler_user_agent: str = "AI Native Opportunities Bot (+contact@example.com)"
@@ -28,6 +29,7 @@ class Settings(BaseSettings):
         "supabase_service_role_key",
         "openai_api_key",
         "anthropic_api_key",
+        "reddit_bearer_token",
         "source_config_json",
         mode="before",
     )
