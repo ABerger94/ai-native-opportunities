@@ -14,14 +14,23 @@ export function decodeHtml(value: string): string {
 }
 
 export function htmlToText(value: string): string {
-  return decodeHtml(
-    value
+  let normalized = value;
+  for (let index = 0; index < 3; index += 1) {
+    const decoded = decodeHtml(normalized);
+    if (decoded === normalized) {
+      break;
+    }
+    normalized = decoded;
+  }
+
+  return normalized
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<h[1-6][^>]*>/gi, "\n\n")
+      .replace(/<li[^>]*>/gi, "\n- ")
       .replace(/<\/(p|div|h[1-6]|li|ul|ol)>/gi, "\n")
       .replace(/<br\s*\/?>/gi, "\n")
       .replace(/<[^>]+>/g, " ")
-  )
     .replace(/[ \t]+/g, " ")
     .replace(/\n\s+/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
