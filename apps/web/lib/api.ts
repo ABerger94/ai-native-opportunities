@@ -21,6 +21,10 @@ export function getOpportunities(): Promise<Opportunity[]> {
   return getJson<Opportunity[]>("/opportunities?limit=50");
 }
 
+export function getOpportunity(id: string): Promise<Opportunity> {
+  return getJson<Opportunity>(`/opportunities/${id}`);
+}
+
 export function getCompanies(): Promise<Company[]> {
   return getJson<Company[]>("/companies?limit=50");
 }

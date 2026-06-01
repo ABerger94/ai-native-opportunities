@@ -1,4 +1,5 @@
-import { BriefcaseBusiness, Building2, DatabaseZap, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, BriefcaseBusiness, Building2, DatabaseZap, RefreshCw } from "lucide-react";
 import { getDashboard } from "@/lib/api";
 import { Badge, Score } from "@/components/ui";
 import { DashboardActions } from "@/components/dashboard-actions";
@@ -10,7 +11,8 @@ export default async function Home() {
     empty_state: {
       has_real_data: false,
       message: `API unavailable: ${error.message}`
-    }
+    },
+    configured_source_count: 0
   }));
 
   const jobs = dashboard.top_ai_native_jobs;
@@ -32,7 +34,7 @@ export default async function Home() {
         <Metric icon={<BriefcaseBusiness className="h-5 w-5" />} label="Real Opportunities" value={jobs.length} />
         <Metric icon={<Building2 className="h-5 w-5" />} label="AI Builder Companies" value={companies.length} />
         <Metric icon={<DatabaseZap className="h-5 w-5" />} label="Mock Records" value={0} />
-        <Metric icon={<RefreshCw className="h-5 w-5" />} label="Configured Sources Required" value={dashboard.empty_state.has_real_data ? 0 : 1} />
+        <Metric icon={<RefreshCw className="h-5 w-5" />} label="Configured Sources" value={dashboard.configured_source_count ?? 0} />
       </section>
 
       {!dashboard.empty_state.has_real_data ? (
@@ -58,9 +60,9 @@ export default async function Home() {
               <article key={job.id} className="border border-border bg-card p-5">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <a className="text-lg font-semibold hover:underline" href={job.url} target="_blank">
+                    <Link className="text-lg font-semibold hover:underline" href={`/opportunities/${job.id}`}>
                       {job.title}
-                    </a>
+                    </Link>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {job.company?.name ?? job.source} {job.location ? `- ${job.location}` : ""}
                     </p>
@@ -71,6 +73,12 @@ export default async function Home() {
                         <Badge key={tool}>{tool}</Badge>
                       ))}
                     </div>
+                    <Link
+                      className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                      href={`/opportunities/${job.id}`}
+                    >
+                      View opportunity profile <ArrowRight className="h-4 w-4" />
+                    </Link>
                   </div>
                   <div className="grid w-full gap-3 md:w-56">
                     <Score label="AI Native" value={job.ai_native_score} />

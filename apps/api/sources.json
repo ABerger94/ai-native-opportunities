@@ -15,6 +15,78 @@
       "enabled": true,
       "company_name": "OpenAI",
       "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "replit-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/replit",
+      "enabled": true,
+      "company_name": "Replit",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "elevenlabs-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/elevenlabs",
+      "enabled": true,
+      "company_name": "ElevenLabs",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "harvey-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/harvey",
+      "enabled": true,
+      "company_name": "Harvey",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "langchain-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/langchain",
+      "enabled": true,
+      "company_name": "LangChain",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "cursor-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/cursor",
+      "enabled": true,
+      "company_name": "Cursor",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "cognition-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/cognition",
+      "enabled": true,
+      "company_name": "Cognition",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "mercor-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/mercor",
+      "enabled": true,
+      "company_name": "Mercor",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "lovable-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/lovable",
+      "enabled": true,
+      "company_name": "Lovable",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "scaleai-greenhouse",
+      "kind": "greenhouse",
+      "url": "https://boards-api.greenhouse.io/v1/boards/scaleai/jobs?content=true",
+      "enabled": true,
+      "company_name": "Scale AI",
+      "permission_note": "Public Greenhouse board API endpoint."
     }
   ]
 }

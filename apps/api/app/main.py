@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.db import Base, engine, get_db
 from app.config import get_settings
-from app.ingestion import import_opportunity, run_ingestion
+from app.ingestion import import_opportunity, load_sources, run_ingestion
 from app.matching import calculate_match
 from app.models import Company, Match, Opportunity, ResumeProfile
 from app.resume_parser import extract_skill_groups, extract_text, parse_resume
@@ -83,6 +83,18 @@ def list_opportunities(
         .limit(min(limit, 100))
     )
     return list(db.scalars(stmt).unique())
+
+
+@app.get("/opportunities/{opportunity_id}", response_model=OpportunityRead)
+def get_opportunity(opportunity_id: UUID, db: Session = Depends(get_db)) -> Opportunity:
+    opportunity = db.scalar(
+        select(Opportunity)
+        .options(joinedload(Opportunity.company))
+        .where(Opportunity.id == opportunity_id)
+    )
+    if opportunity is None:
+        raise HTTPException(status_code=404, detail="Opportunity not found.")
+    return opportunity
 
 
 @app.post("/opportunities", response_model=OpportunityRead)
@@ -220,6 +232,7 @@ def generate_proposal(match_id: UUID, db: Session = Depends(get_db)) -> dict[str
 def dashboard(db: Session = Depends(get_db)) -> dict:
     top_jobs = list_opportunities(min_ai_score=0, limit=10, db=db)
     companies = list_companies(limit=10, db=db)
+    source_count = len(load_sources())
     return {
         "top_ai_native_jobs": [
             OpportunityRead.model_validate(job).model_dump(mode="json") for job in top_jobs
@@ -231,4 +244,5 @@ def dashboard(db: Session = Depends(get_db)) -> dict:
             "has_real_data": bool(top_jobs or companies),
             "message": "No opportunities are shown until compliant real sources are configured and ingestion has run.",
         },
+        "configured_source_count": source_count,
     }
