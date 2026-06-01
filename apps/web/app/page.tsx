@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, Building2, RefreshCw } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Building2, RefreshCw, Search } from "lucide-react";
 import { getDashboard } from "@/lib/api";
 import { Badge, Score } from "@/components/ui";
 import { DashboardActions } from "@/components/dashboard-actions";
@@ -31,6 +31,13 @@ export default async function Home() {
             <h1 className="mt-1 text-3xl font-semibold tracking-normal">Remote and hybrid work where AI is the job</h1>
           </div>
           <DashboardActions />
+          <Link
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-muted"
+            href="/opportunities"
+          >
+            <Search className="h-4 w-4" />
+            Browse all
+          </Link>
         </div>
       </header>
 
@@ -76,7 +83,7 @@ export default async function Home() {
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Badge>{job.opportunity_type}</Badge>
-                      {job.remote ? <Badge>Remote</Badge> : null}
+                      {job.remote ? <Badge>{formatWorkMode(job.work_mode, job.work_mode_confidence)}</Badge> : null}
                       {job.tools_mentioned.slice(0, 5).map((tool) => (
                         <Badge key={tool}>{tool}</Badge>
                       ))}
@@ -120,6 +127,11 @@ export default async function Home() {
       </section>
     </main>
   );
+}
+
+function formatWorkMode(workMode: string, confidence: number) {
+  const label = workMode ? workMode[0].toUpperCase() + workMode.slice(1) : "Remote";
+  return `${label} ${confidence}%`;
 }
 
 function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {

@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 from urllib.robotparser import RobotFileParser
@@ -18,7 +19,7 @@ from app.scoring import classify_opportunity, score_company
 
 class SourceConfig(BaseModel):
     name: str
-    kind: str = Field(pattern="^(json|rss|greenhouse|lever|ashby|workable)$")
+    kind: str = Field(pattern="^(json|rss|greenhouse|lever|ashby|workable|himalayas|remotejobs)$")
     url: HttpUrl
     enabled: bool = True
     terms_url: HttpUrl | None = None
@@ -33,6 +34,13 @@ class IngestionResult:
     imported_count: int
     skipped_count: int
     errors: list[str]
+
+
+@dataclass(frozen=True)
+class WorkModeResult:
+    work_mode: str
+    confidence: int
+    evidence: dict
 
 
 def load_sources(path: str | None = None) -> list[SourceConfig]:
@@ -91,6 +99,10 @@ async def fetch_source(source: SourceConfig) -> list[OpportunityIngest]:
             return _parse_ashby(source, response.json())
         if source.kind == "workable":
             return _parse_workable(source, response.json())
+        if source.kind == "himalayas":
+            return _parse_himalayas(source, response.json())
+        if source.kind == "remotejobs":
+            return _parse_remotejobs(source, response.json())
     return []
 
 
@@ -104,6 +116,7 @@ def import_opportunity(db: Session, payload: OpportunityIngest) -> Opportunity:
         budget_max=payload.budget_max,
         hourly_max=payload.hourly_max,
     )
+    work_mode = infer_work_mode(payload)
 
     company = None
     if payload.company_name:
@@ -136,7 +149,10 @@ def import_opportunity(db: Session, payload: OpportunityIngest) -> Opportunity:
         "title": payload.title,
         "description": payload.description,
         "location": payload.location,
-        "remote": payload.remote or _is_remote_or_hybrid(payload),
+        "remote": work_mode.work_mode in {"remote", "hybrid"} and work_mode.confidence >= 70,
+        "work_mode": work_mode.work_mode,
+        "work_mode_confidence": work_mode.confidence,
+        "work_mode_evidence": work_mode.evidence,
         "opportunity_type": payload.opportunity_type,
         "required_skills": classification.required_skills,
         "preferred_skills": classification.preferred_skills,
@@ -160,6 +176,63 @@ def import_opportunity(db: Session, payload: OpportunityIngest) -> Opportunity:
     opportunity = Opportunity(source=payload.source, external_id=payload.external_id, **values)
     db.add(opportunity)
     return opportunity
+
+
+def infer_work_mode(payload: OpportunityIngest) -> WorkModeResult:
+    if payload.work_mode in {"remote", "hybrid", "onsite", "unknown"} and payload.work_mode_confidence is not None:
+        return WorkModeResult(
+            payload.work_mode,
+            payload.work_mode_confidence,
+            payload.work_mode_evidence or {"source": "provided by importer"},
+        )
+
+    location = (payload.location or "").lower()
+    title = payload.title.lower()
+    description = BeautifulSoup(payload.description or "", "html.parser").get_text(" ").lower()
+    raw = str(payload.raw_payload or {}).lower()
+    haystack = " ".join([title, description, location, raw])
+
+    onsite_signals = [
+        "onsite only",
+        "on-site only",
+        "fully onsite",
+        "fully on-site",
+        "not remote",
+        "no remote",
+        "must be in office",
+        "5 days in office",
+        "five days in office",
+        "relocation required",
+    ]
+    hybrid_signals = [
+        "hybrid",
+        "partly remote",
+        "partially remote",
+        "remote-friendly",
+        "remote friendly",
+        "some days in office",
+    ]
+    remote_signals = [
+        "remote",
+        "work from home",
+        "wfh",
+        "work remotely",
+        "anywhere in the world",
+        "anywhere",
+        "distributed team",
+        "distributed company",
+        "virtual",
+    ]
+
+    if any(signal in haystack for signal in onsite_signals):
+        return WorkModeResult("onsite", 95, {"negative_signal": "explicit onsite or no-remote language"})
+    if "hybrid" in location or any(signal in haystack for signal in hybrid_signals):
+        return WorkModeResult("hybrid", 86, {"positive_signal": "explicit hybrid or remote-friendly language"})
+    if payload.remote or "remote" in location or location in {"anywhere", "anywhere in the world"}:
+        return WorkModeResult("remote", 95, {"positive_signal": "source location or importer marks remote"})
+    if any(signal in haystack for signal in remote_signals):
+        return WorkModeResult("remote", 78, {"positive_signal": "remote language found in posting text"})
+    return WorkModeResult("unknown", 20, {"reason": "no reliable remote or hybrid signal found"})
 
 
 def _is_remote_or_hybrid(payload: OpportunityIngest) -> bool:
@@ -245,14 +318,19 @@ def _parse_rss(source: SourceConfig, xml_text: str) -> list[OpportunityIngest]:
 def _parse_json(source: SourceConfig, data: object) -> list[OpportunityIngest]:
     if not isinstance(data, list):
         if isinstance(data, dict):
-            data = data.get("jobs") or data.get("items") or data.get("results") or []
+            data = data.get("jobs") or data.get("items") or data.get("results") or data.get("data") or []
     records = []
     for item in data if isinstance(data, list) else []:
         if not isinstance(item, dict):
             continue
         title = item.get("title") or item.get("name")
-        url = item.get("url") or item.get("apply_url") or item.get("absolute_url")
+        url = item.get("url") or item.get("apply_url") or item.get("applyUrl") or item.get("applicationLink") or item.get("absolute_url")
         description = item.get("description") or item.get("content") or ""
+        company = item.get("company")
+        if isinstance(company, dict):
+            company_name = company.get("name")
+        else:
+            company_name = company
         if not title or not url:
             continue
         records.append(
@@ -262,11 +340,83 @@ def _parse_json(source: SourceConfig, data: object) -> list[OpportunityIngest]:
                 url=url,
                 title=title,
                 description=description,
-                company_name=item.get("company") or source.company_name,
+                company_name=item.get("companyName") or company_name or source.company_name,
                 location=item.get("location"),
                 remote=bool(item.get("remote", False)),
                 opportunity_type=source.opportunity_type,
                 raw_payload=item,
+            )
+        )
+    return records
+
+
+def _parse_himalayas(source: SourceConfig, data: dict) -> list[OpportunityIngest]:
+    records = []
+    for job in data.get("jobs", []):
+        url = job.get("applicationLink") or job.get("guid")
+        title = job.get("title")
+        if not title or not url:
+            continue
+        location_restrictions = job.get("locationRestrictions") or []
+        location = ", ".join(location_restrictions) if location_restrictions else "Remote"
+        posted = job.get("pubDate")
+        posted_at = None
+        if isinstance(posted, int):
+            posted_at = datetime.fromtimestamp(posted, tz=timezone.utc).replace(tzinfo=None)
+        records.append(
+            OpportunityIngest(
+                source=source.name,
+                external_id=str(job.get("guid") or url),
+                url=url,
+                title=title,
+                description=BeautifulSoup(job.get("description", ""), "html.parser").get_text(" "),
+                company_name=job.get("companyName") or source.company_name,
+                location=location,
+                remote=True,
+                work_mode="remote",
+                work_mode_confidence=95,
+                work_mode_evidence={"positive_signal": "Himalayas remote job API listing"},
+                opportunity_type=source.opportunity_type,
+                budget_min=job.get("minSalary"),
+                budget_max=job.get("maxSalary"),
+                posted_at=posted_at,
+                raw_payload=job,
+            )
+        )
+    return records
+
+
+def _parse_remotejobs(source: SourceConfig, data: dict) -> list[OpportunityIngest]:
+    records = []
+    for job in data.get("data", []):
+        url = job.get("apply_url") or job.get("url")
+        title = job.get("title")
+        if not title or not url:
+            continue
+        company = job.get("company") or {}
+        description = BeautifulSoup(job.get("description", ""), "html.parser").get_text(" ")
+        records.append(
+            OpportunityIngest(
+                source=source.name,
+                external_id=str(job.get("id") or url),
+                url=url,
+                title=title,
+                description=description,
+                company_name=company.get("name") or source.company_name,
+                company_url=company.get("website") or company.get("url"),
+                location=job.get("location") or "Remote",
+                remote=True,
+                work_mode="remote",
+                work_mode_confidence=95,
+                work_mode_evidence={
+                    "positive_signal": "RemoteJobs.org remote API listing",
+                    "attribution": "Powered by RemoteJobs.org",
+                },
+                opportunity_type=source.opportunity_type,
+                budget_min=job.get("salary_min"),
+                budget_max=job.get("salary_max"),
+                posted_at=job.get("posted_at"),
+                raw_payload={**job, "attribution": data.get("meta", {})},
             )
         )
     return records

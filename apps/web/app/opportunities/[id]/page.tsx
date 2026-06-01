@@ -37,7 +37,7 @@ export default async function OpportunityDetailPage({ params }: PageProps) {
               <div className="flex flex-wrap gap-2">
                 <Badge>{opportunity.opportunity_type}</Badge>
                 <Badge>{opportunity.source}</Badge>
-                {opportunity.remote ? <Badge>Remote</Badge> : null}
+                {opportunity.remote ? <Badge>{formatWorkMode(opportunity.work_mode, opportunity.work_mode_confidence)}</Badge> : null}
               </div>
               <h1 className="mt-4 text-3xl font-semibold tracking-normal">{opportunity.title}</h1>
               <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
@@ -113,11 +113,22 @@ export default async function OpportunityDetailPage({ params }: PageProps) {
             <h2 className="text-lg font-semibold">Profile</h2>
             <dl className="mt-4 grid gap-3 text-sm">
               <Meta label="Company" value={companyName} />
+              <Meta label="Work mode" value={formatWorkMode(opportunity.work_mode, opportunity.work_mode_confidence)} />
+              <Meta label="Remote evidence" value={formatEvidence(opportunity.work_mode_evidence)} />
               <Meta label="Posted" value={formatDate(opportunity.posted_at)} />
               <Meta label="External ID" value={opportunity.external_id} />
               <Meta label="Budget" value={formatMoneyRange(opportunity.budget_min, opportunity.budget_max)} />
               <Meta label="Hourly" value={formatMoneyRange(opportunity.hourly_min, opportunity.hourly_max)} />
             </dl>
+            {opportunity.source.startsWith("remotejobs") ? (
+              <p className="mt-4 text-xs text-muted-foreground">
+                Powered by{" "}
+                <a className="font-medium text-primary hover:underline" href="https://remotejobs.org" target="_blank" rel="noreferrer">
+                  RemoteJobs.org
+                </a>
+                .
+              </p>
+            ) : null}
           </section>
 
           {categories.length ? (
@@ -163,4 +174,14 @@ function formatMoneyRange(min: number | null, max: number | null): string {
     return `${formatter.format(min)} - ${formatter.format(max)}`;
   }
   return formatter.format(min ?? max ?? 0);
+}
+
+function formatWorkMode(workMode: string, confidence: number): string {
+  const normalized = workMode || "unknown";
+  const label = normalized[0].toUpperCase() + normalized.slice(1);
+  return `${label} ${confidence}%`;
+}
+
+function formatEvidence(evidence: Record<string, string>): string {
+  return evidence.positive_signal ?? evidence.negative_signal ?? evidence.reason ?? evidence.source ?? "Not captured";
 }

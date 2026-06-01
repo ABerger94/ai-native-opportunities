@@ -41,6 +41,9 @@ class OpportunityRead(BaseModel):
     description: str
     location: str | None
     remote: bool
+    work_mode: str = "unknown"
+    work_mode_confidence: int = 0
+    work_mode_evidence: dict = {}
     opportunity_type: OpportunityType
     required_skills: list[str]
     preferred_skills: list[str]
@@ -69,6 +72,9 @@ class OpportunityIngest(BaseModel):
     careers_url: HttpUrl | None = None
     location: str | None = None
     remote: bool = False
+    work_mode: str | None = None
+    work_mode_confidence: int | None = None
+    work_mode_evidence: dict = {}
     opportunity_type: OpportunityType = OpportunityType.job
     required_skills: list[str] = []
     preferred_skills: list[str] = []

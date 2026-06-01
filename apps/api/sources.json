@@ -161,6 +161,62 @@
       "permission_note": "Public Lever postings API endpoint."
     },
     {
+      "name": "himalayas-ai-automation",
+      "kind": "himalayas",
+      "url": "https://himalayas.app/jobs/api?limit=50&query=AI%20automation",
+      "enabled": true,
+      "permission_note": "Public Himalayas jobs API. Remote marketplace feed; classifier filters for AI-builder fit."
+    },
+    {
+      "name": "himalayas-prompt-engineer",
+      "kind": "himalayas",
+      "url": "https://himalayas.app/jobs/api?limit=50&query=prompt%20engineer",
+      "enabled": true,
+      "permission_note": "Public Himalayas jobs API. Remote marketplace feed; classifier filters for AI-builder fit."
+    },
+    {
+      "name": "remotejobs-ai-automation",
+      "kind": "remotejobs",
+      "url": "https://remotejobs.org/api/v1/jobs?q=AI%20automation&limit=50",
+      "enabled": true,
+      "permission_note": "Public RemoteJobs.org API. Display attribution when showing these jobs."
+    },
+    {
+      "name": "remotejobs-ai-workflow",
+      "kind": "remotejobs",
+      "url": "https://remotejobs.org/api/v1/jobs?q=AI%20workflow&limit=50",
+      "enabled": true,
+      "permission_note": "Public RemoteJobs.org API. Display attribution when showing these jobs."
+    },
+    {
+      "name": "remotejobs-ai-operations",
+      "kind": "remotejobs",
+      "url": "https://remotejobs.org/api/v1/jobs?q=AI%20operations&limit=50",
+      "enabled": true,
+      "permission_note": "Public RemoteJobs.org API. Display attribution when showing these jobs."
+    },
+    {
+      "name": "remotejobs-prompt-engineer",
+      "kind": "remotejobs",
+      "url": "https://remotejobs.org/api/v1/jobs?q=prompt%20engineer&limit=50",
+      "enabled": true,
+      "permission_note": "Public RemoteJobs.org API. Display attribution when showing these jobs."
+    },
+    {
+      "name": "remotejobs-llm",
+      "kind": "remotejobs",
+      "url": "https://remotejobs.org/api/v1/jobs?q=LLM&limit=50",
+      "enabled": true,
+      "permission_note": "Public RemoteJobs.org API. Display attribution when showing these jobs."
+    },
+    {
+      "name": "remotejobs-n8n",
+      "kind": "remotejobs",
+      "url": "https://remotejobs.org/api/v1/jobs?q=n8n&limit=50",
+      "enabled": true,
+      "permission_note": "Public RemoteJobs.org API. Display attribution when showing these jobs."
+    },
+    {
       "name": "remoteok-public-api",
       "kind": "json",
       "url": "https://remoteok.com/api",

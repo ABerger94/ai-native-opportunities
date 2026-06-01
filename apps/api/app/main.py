@@ -4,7 +4,7 @@ import httpx
 import structlog
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
+from sqlalchemy import or_, text
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session, joinedload
 
@@ -58,6 +58,10 @@ def startup() -> None:
         with engine.begin() as connection:
             connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         Base.metadata.create_all(bind=engine)
+        with engine.begin() as connection:
+            connection.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS work_mode VARCHAR(40) DEFAULT 'unknown'"))
+            connection.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS work_mode_confidence INTEGER DEFAULT 0"))
+            connection.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS work_mode_evidence JSONB DEFAULT '{}'::jsonb"))
     except Exception as exc:  # noqa: BLE001
         logger.error("database.startup_failed", error=str(exc))
 
@@ -79,20 +83,46 @@ def health_db() -> dict[str, str]:
 
 @app.get("/opportunities", response_model=list[OpportunityRead])
 def list_opportunities(
-    min_ai_score: int = 0,
+    min_ai_score: int = 35,
+    min_freelance_ai_score: int = 55,
+    min_work_mode_confidence: int = 70,
+    query: str | None = None,
+    work_mode: str | None = None,
     limit: int = 50,
+    offset: int = 0,
     remote_or_hybrid_only: bool = True,
     db: Session = Depends(get_db),
 ) -> list[Opportunity]:
     stmt = (
         select(Opportunity)
         .options(joinedload(Opportunity.company))
-        .where(Opportunity.ai_native_score >= min_ai_score)
+        .where(
+            or_(
+                Opportunity.ai_native_score >= min_ai_score,
+                Opportunity.freelance_ai_score >= min_freelance_ai_score,
+            )
+        )
         .order_by(desc(Opportunity.opportunity_score), desc(Opportunity.discovered_at))
+        .offset(max(offset, 0))
         .limit(min(limit, 100))
     )
     if remote_or_hybrid_only:
-        stmt = stmt.where(Opportunity.remote.is_(True))
+        stmt = stmt.where(
+            Opportunity.remote.is_(True),
+            Opportunity.work_mode.in_(["remote", "hybrid"]),
+            Opportunity.work_mode_confidence >= min_work_mode_confidence,
+        )
+    if work_mode in {"remote", "hybrid"}:
+        stmt = stmt.where(Opportunity.work_mode == work_mode)
+    if query:
+        pattern = f"%{query.strip()}%"
+        stmt = stmt.where(
+            or_(
+                Opportunity.title.ilike(pattern),
+                Opportunity.description.ilike(pattern),
+                Opportunity.source.ilike(pattern),
+            )
+        )
     return list(db.scalars(stmt).unique())
 
 
@@ -286,7 +316,15 @@ def match_resume(resume_id: UUID, limit: int = 50, db: Session = Depends(get_db)
     resume = db.get(ResumeProfile, resume_id)
     if resume is None:
         raise HTTPException(status_code=404, detail="Resume not found.")
-    opportunities = list(db.scalars(select(Opportunity).where(Opportunity.remote.is_(True))))
+    opportunities = list(
+        db.scalars(
+            select(Opportunity).where(
+                Opportunity.remote.is_(True),
+                Opportunity.work_mode.in_(["remote", "hybrid"]),
+                Opportunity.work_mode_confidence >= 70,
+            )
+        )
+    )
     matches: list[Match] = []
     for opportunity in opportunities:
         values = calculate_match(resume, opportunity)

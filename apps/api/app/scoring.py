@@ -79,6 +79,55 @@ TRADITIONAL_SE_SIGNALS = {
     "systems programming",
 }
 
+NON_BUILDER_TITLE_TERMS = {
+    "account executive",
+    "account manager",
+    "account management",
+    "bookkeeper",
+    "business development",
+    "counsel",
+    "customer success",
+    "finance",
+    "financial",
+    "hr",
+    "legal",
+    "people partner",
+    "recruiter",
+    "sales",
+}
+
+TRADITIONAL_ENGINEERING_TITLE_TERMS = {
+    "backend engineer",
+    "data engineer",
+    "frontend engineer",
+    "full stack engineer",
+    "infrastructure engineer",
+    "machine learning engineer",
+    "platform engineer",
+    "research engineer",
+    "research scientist",
+    "site reliability",
+    "software engineer",
+}
+
+BUILDER_SIGNALS = {
+    "agent",
+    "agentic",
+    "ai builder",
+    "ai implementation",
+    "ai operations",
+    "ai product",
+    "automation",
+    "build workflows",
+    "builder",
+    "integration",
+    "llm",
+    "mvp",
+    "no-code",
+    "prompt",
+    "workflow",
+}
+
 FREELANCE_CATEGORIES = {
     "ai automation builder": ["automation", "zapier", "make", "n8n"],
     "ai workflow developer": ["workflow", "process", "operations"],
@@ -155,14 +204,32 @@ def classify_opportunity(
         score += min(28, len(business_hits) * 7)
         positives.extend(f"business signal: {term}" for term in business_hits[:6])
 
+    builder_hits = [term for term in BUILDER_SIGNALS if term in lowered]
     if search(r"\b(agent|agents|agentic|llm|prompt|automation|ai)\b", lowered):
         score += 12
         positives.append("responsibilities center AI, agents, LLMs, or automation")
+    if builder_hits:
+        score += min(20, len(builder_hits) * 5)
+        positives.extend(f"builder signal: {term}" for term in builder_hits[:4])
 
     traditional_hits = [term for term in TRADITIONAL_SE_SIGNALS if term in lowered]
     if traditional_hits:
         score -= min(35, len(traditional_hits) * 12)
         negatives.extend(f"traditional software signal: {term}" for term in traditional_hits)
+
+    title_lower = title.lower()
+    non_builder_title_hits = [term for term in NON_BUILDER_TITLE_TERMS if term in title_lower]
+    traditional_title_hits = [term for term in TRADITIONAL_ENGINEERING_TITLE_TERMS if term in title_lower]
+    has_strong_builder_context = bool(builder_hits or tools or business_hits)
+    if non_builder_title_hits and not has_strong_builder_context:
+        score -= 38
+        negatives.extend(f"non-builder title signal: {term}" for term in non_builder_title_hits[:3])
+    elif non_builder_title_hits:
+        score -= 12
+        negatives.extend(f"adjacent business role, verify AI-building is central: {term}" for term in non_builder_title_hits[:2])
+    if traditional_title_hits and not any(term in lowered for term in ["agent", "automation", "workflow", "llm application", "prompt"]):
+        score -= 28
+        negatives.extend(f"traditional engineering title signal: {term}" for term in traditional_title_hits[:3])
 
     freelance_score = 0
     if opportunity_type in {

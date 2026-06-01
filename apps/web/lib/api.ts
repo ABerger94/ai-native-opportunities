@@ -17,8 +17,15 @@ export function getDashboard(): Promise<Dashboard> {
   return getJson<Dashboard>("/dashboard");
 }
 
-export function getOpportunities(): Promise<Opportunity[]> {
-  return getJson<Opportunity[]>("/opportunities?limit=50");
+export function getOpportunities(params: Record<string, string | number | boolean | undefined> = {}): Promise<Opportunity[]> {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries({ limit: 50, ...params })) {
+    const normalized = value === undefined ? "" : String(value);
+    if (normalized !== "") {
+      query.set(key, normalized);
+    }
+  }
+  return getJson<Opportunity[]>(`/opportunities?${query.toString()}`);
 }
 
 export function getOpportunity(id: string): Promise<Opportunity> {

@@ -7,6 +7,9 @@ export type Opportunity = {
   description: string;
   location: string | null;
   remote: boolean;
+  work_mode: string;
+  work_mode_confidence: number;
+  work_mode_evidence: Record<string, string>;
   opportunity_type: string;
   required_skills: string[];
   preferred_skills: string[];
