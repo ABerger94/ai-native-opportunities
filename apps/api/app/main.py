@@ -93,6 +93,7 @@ def list_opportunities(
     remote_or_hybrid_only: bool = True,
     db: Session = Depends(get_db),
 ) -> list[Opportunity]:
+    requested_limit = min(limit, 100)
     stmt = (
         select(Opportunity)
         .options(joinedload(Opportunity.company))
@@ -104,7 +105,7 @@ def list_opportunities(
         )
         .order_by(desc(Opportunity.opportunity_score), desc(Opportunity.discovered_at))
         .offset(max(offset, 0))
-        .limit(min(limit, 100))
+        .limit(min(requested_limit * 4, 400))
     )
     if remote_or_hybrid_only:
         stmt = stmt.where(
@@ -123,7 +124,18 @@ def list_opportunities(
                 Opportunity.source.ilike(pattern),
             )
         )
-    return list(db.scalars(stmt).unique())
+    records = list(db.scalars(stmt).unique())
+    seen_urls: set[str] = set()
+    unique_records: list[Opportunity] = []
+    for record in records:
+        normalized_url = record.url.rstrip("/").lower()
+        if normalized_url in seen_urls:
+            continue
+        seen_urls.add(normalized_url)
+        unique_records.append(record)
+        if len(unique_records) >= requested_limit:
+            break
+    return unique_records
 
 
 @app.get("/opportunities/{opportunity_id}", response_model=OpportunityRead)
