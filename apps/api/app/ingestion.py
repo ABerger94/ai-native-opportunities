@@ -38,13 +38,23 @@ class IngestionResult:
 def load_sources(path: str | None = None) -> list[SourceConfig]:
     settings = get_settings()
     if settings.source_config_json:
-        raw = json.loads(settings.source_config_json)
+        raw = _load_source_json(settings.source_config_json)
         return [SourceConfig.model_validate(item) for item in raw.get("sources", []) if item.get("enabled", True)]
     source_path = Path(path or get_settings().source_config_path)
     if not source_path.exists():
         return []
     raw = json.loads(source_path.read_text(encoding="utf-8"))
     return [SourceConfig.model_validate(item) for item in raw.get("sources", []) if item.get("enabled", True)]
+
+
+def _load_source_json(value: str) -> dict:
+    normalized = value.strip()
+    if normalized.startswith("'") and normalized.endswith("'"):
+        normalized = normalized[1:-1]
+    try:
+        return json.loads(normalized)
+    except json.JSONDecodeError:
+        return json.loads(normalized.replace('\\"', '"'))
 
 
 async def robots_allows(client: httpx.AsyncClient, url: str, user_agent: str) -> bool:
