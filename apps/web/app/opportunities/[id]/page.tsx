@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getOpportunity } from "@/lib/api";
 import { formatDate, htmlToText } from "@/lib/format";
 import { Badge, Score } from "@/components/ui";
+import { OpportunityMatchPanel } from "@/components/opportunity-match-panel";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -75,6 +76,8 @@ export default async function OpportunityDetailPage({ params }: PageProps) {
         </article>
 
         <aside className="grid content-start gap-4">
+          <OpportunityMatchPanel opportunityId={opportunity.id} />
+
           <section className="border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">Scores</h2>
             <div className="mt-4 grid gap-4">

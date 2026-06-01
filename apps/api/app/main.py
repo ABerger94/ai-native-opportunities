@@ -211,6 +211,42 @@ def list_matches(resume_id: UUID, limit: int = 50, db: Session = Depends(get_db)
     )
 
 
+@app.get("/resumes/{resume_id}/opportunities/{opportunity_id}/match", response_model=MatchRead)
+def get_or_create_opportunity_match(
+    resume_id: UUID,
+    opportunity_id: UUID,
+    db: Session = Depends(get_db),
+) -> Match:
+    resume = db.get(ResumeProfile, resume_id)
+    if resume is None:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+    opportunity = db.scalar(
+        select(Opportunity)
+        .options(joinedload(Opportunity.company))
+        .where(Opportunity.id == opportunity_id)
+    )
+    if opportunity is None:
+        raise HTTPException(status_code=404, detail="Opportunity not found.")
+    match = db.scalar(
+        select(Match)
+        .options(joinedload(Match.opportunity).joinedload(Opportunity.company))
+        .where(Match.resume_id == resume.id, Match.opportunity_id == opportunity.id)
+    )
+    values = calculate_match(resume, opportunity)
+    if match:
+        for key, value in values.items():
+            setattr(match, key, value)
+    else:
+        match = Match(resume_id=resume.id, opportunity_id=opportunity.id, **values)
+        db.add(match)
+    db.commit()
+    return db.scalar(
+        select(Match)
+        .options(joinedload(Match.opportunity).joinedload(Opportunity.company))
+        .where(Match.id == match.id)
+    )
+
+
 @app.get("/match-reports/{match_id}", response_model=MatchRead)
 def get_match_report(match_id: UUID, db: Session = Depends(get_db)) -> Match:
     match = db.scalar(
