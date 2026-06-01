@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
     source_config_path: str = "sources.json"
+    source_config_json: str | None = None
     crawler_user_agent: str = "AI Native Opportunities Bot (+contact@example.com)"
 
 

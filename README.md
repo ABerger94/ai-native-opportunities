@@ -104,6 +104,7 @@ Required backend variables:
 - `OPENAI_API_KEY`
 - `ANTHROPIC_API_KEY`
 - `SOURCE_CONFIG_PATH`
+- `SOURCE_CONFIG_JSON`
 - `CRAWLER_USER_AGENT`
 
 ## Compliance

@@ -36,6 +36,10 @@ class IngestionResult:
 
 
 def load_sources(path: str | None = None) -> list[SourceConfig]:
+    settings = get_settings()
+    if settings.source_config_json:
+        raw = json.loads(settings.source_config_json)
+        return [SourceConfig.model_validate(item) for item in raw.get("sources", []) if item.get("enabled", True)]
     source_path = Path(path or get_settings().source_config_path)
     if not source_path.exists():
         return []
