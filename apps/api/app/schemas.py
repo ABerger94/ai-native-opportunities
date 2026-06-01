@@ -92,6 +92,22 @@ class RedditImport(BaseModel):
     hourly_max: float | None = None
 
 
+class ManualOpportunityImport(BaseModel):
+    source: str = "manual"
+    url: HttpUrl
+    title: str
+    company_name: str | None = None
+    description: str
+    location: str | None = "Remote"
+    remote: bool = True
+    opportunity_type: OpportunityType = OpportunityType.job
+    budget_min: float | None = None
+    budget_max: float | None = None
+    hourly_min: float | None = None
+    hourly_max: float | None = None
+    notes: str | None = None
+
+
 class RedditSearchResult(BaseModel):
     title: str
     url: str

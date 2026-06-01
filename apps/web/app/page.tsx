@@ -6,6 +6,7 @@ import { DashboardActions } from "@/components/dashboard-actions";
 import { ResumeMatcher } from "@/components/resume-matcher";
 import { ApplicationTracker } from "@/components/application-tracker";
 import { RedditImporter } from "@/components/reddit-importer";
+import { ManualOpportunityImporter } from "@/components/manual-opportunity-importer";
 
 export default async function Home() {
   const dashboard = await getDashboard().catch((error: Error) => ({
@@ -41,6 +42,7 @@ export default async function Home() {
 
       <ResumeMatcher />
       <ApplicationTracker />
+      <ManualOpportunityImporter />
       <RedditImporter />
 
       {!dashboard.empty_state.has_real_data ? (

@@ -21,6 +21,7 @@ from app.schemas import (
     CompanyRead,
     IngestionRunRead,
     MatchRead,
+    ManualOpportunityImport,
     OpportunityIngest,
     OpportunityRead,
     RedditImport,
@@ -136,6 +137,39 @@ def import_reddit_post(payload: RedditImport, db: Session = Depends(get_db)) -> 
             location="Remote",
             remote=True,
             opportunity_type=OpportunityType.freelance,
+            budget_min=payload.budget_min,
+            budget_max=payload.budget_max,
+            hourly_min=payload.hourly_min,
+            hourly_max=payload.hourly_max,
+            raw_payload=payload.model_dump(mode="json"),
+        ),
+    )
+    db.commit()
+    db.refresh(opportunity)
+    return opportunity
+
+
+@app.post("/manual-opportunities/import", response_model=OpportunityRead)
+def import_manual_opportunity(
+    payload: ManualOpportunityImport,
+    db: Session = Depends(get_db),
+) -> Opportunity:
+    source = f"manual-{payload.source}".lower().replace(" ", "-").replace("/", "-")
+    description = payload.description
+    if payload.notes:
+        description = f"{description}\n\nSource notes:\n{payload.notes}"
+    opportunity = import_opportunity(
+        db,
+        OpportunityIngest(
+            source=source,
+            external_id=str(payload.url),
+            url=payload.url,
+            title=payload.title,
+            description=description,
+            company_name=payload.company_name or f"{payload.source.title()} Opportunity",
+            location=payload.location,
+            remote=payload.remote,
+            opportunity_type=payload.opportunity_type,
             budget_min=payload.budget_min,
             budget_max=payload.budget_max,
             hourly_min=payload.hourly_min,
