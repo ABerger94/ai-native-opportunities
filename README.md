@@ -97,6 +97,7 @@ Required backend variables:
 
 - `DATABASE_URL`
 - `APP_BASE_URL`
+- `CORS_ORIGINS`
 - `CLERK_JWKS_URL`
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`

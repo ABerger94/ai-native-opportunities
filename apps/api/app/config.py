@@ -11,6 +11,7 @@ class Settings(BaseSettings):
         default="postgresql+psycopg://postgres:postgres@localhost:5432/ai_native_jobs"
     )
     app_base_url: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000"
     clerk_jwks_url: AnyHttpUrl | None = None
     supabase_url: AnyHttpUrl | None = None
     supabase_service_role_key: str | None = None

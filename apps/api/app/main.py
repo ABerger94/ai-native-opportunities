@@ -7,6 +7,7 @@ from sqlalchemy import desc, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.db import Base, engine, get_db
+from app.config import get_settings
 from app.ingestion import import_opportunity, run_ingestion
 from app.matching import calculate_match
 from app.models import Company, Match, Opportunity, ResumeProfile
@@ -23,11 +24,19 @@ from app.security import get_current_user_id
 from app.storage import store_resume_file
 
 logger = structlog.get_logger()
+settings = get_settings()
+allowed_origins = sorted(
+    {
+        origin.strip()
+        for origin in f"{settings.cors_origins},{settings.app_base_url}".split(",")
+        if origin.strip()
+    }
+)
 
 app = FastAPI(title="AI Native Opportunities API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
