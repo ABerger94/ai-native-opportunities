@@ -1,4 +1,4 @@
-import type { Company, Dashboard, Match, Opportunity } from "@/lib/types";
+import type { Application, Company, Dashboard, Match, Opportunity } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -31,4 +31,12 @@ export function getCompanies(): Promise<Company[]> {
 
 export function getMatchReport(id: string): Promise<Match> {
   return getJson<Match>(`/match-reports/${id}`);
+}
+
+export function getApplication(id: string): Promise<Application> {
+  return getJson<Application>(`/applications/${id}`);
+}
+
+export function getApplications(): Promise<Application[]> {
+  return getJson<Application[]>("/applications?limit=50");
 }

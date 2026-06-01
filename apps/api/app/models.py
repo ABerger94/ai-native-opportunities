@@ -36,6 +36,16 @@ class FitBand(str, enum.Enum):
     poor = "poor_fit"
 
 
+class ApplicationStatus(str, enum.Enum):
+    saved = "saved"
+    packet_ready = "packet_ready"
+    needs_review = "needs_review"
+    applied = "applied"
+    follow_up = "follow_up"
+    rejected = "rejected"
+    interview = "interview"
+
+
 class Company(Base):
     __tablename__ = "companies"
 
@@ -135,3 +145,21 @@ class Match(Base):
 
     resume: Mapped[ResumeProfile] = relationship(back_populates="matches")
     opportunity: Mapped[Opportunity] = relationship(back_populates="matches")
+
+
+class Application(Base):
+    __tablename__ = "applications"
+    __table_args__ = (UniqueConstraint("match_id", name="uq_application_match"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    match_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("matches.id"))
+    status: Mapped[ApplicationStatus] = mapped_column(
+        Enum(ApplicationStatus),
+        default=ApplicationStatus.packet_ready,
+    )
+    packet: Mapped[dict] = mapped_column(JSON, default=dict)
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    match: Mapped[Match] = relationship()

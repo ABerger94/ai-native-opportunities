@@ -86,3 +86,30 @@ export type Match = {
   };
   opportunity: Opportunity;
 };
+
+export type ApplicationPacket = {
+  summary: string;
+  fit_band: string;
+  scores: Record<string, number>;
+  pitch: string;
+  cover_letter: string;
+  resume_focus: string[];
+  short_answers: Array<{
+    question: string;
+    answer: string;
+  }>;
+  gaps_to_address: string[];
+  recommended_projects: string[];
+  review_checklist: string[];
+};
+
+export type Application = {
+  id: string;
+  match_id: string;
+  status: string;
+  packet: ApplicationPacket;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  match: Match;
+};

@@ -4,6 +4,7 @@ import { getDashboard } from "@/lib/api";
 import { Badge, Score } from "@/components/ui";
 import { DashboardActions } from "@/components/dashboard-actions";
 import { ResumeMatcher } from "@/components/resume-matcher";
+import { ApplicationTracker } from "@/components/application-tracker";
 
 export default async function Home() {
   const dashboard = await getDashboard().catch((error: Error) => ({
@@ -38,6 +39,7 @@ export default async function Home() {
       </section>
 
       <ResumeMatcher />
+      <ApplicationTracker />
 
       {!dashboard.empty_state.has_real_data ? (
         <section className="mx-auto max-w-7xl px-6">

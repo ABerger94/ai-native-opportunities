@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
-from app.models import FitBand, OpportunityType
+from app.models import ApplicationStatus, FitBand, OpportunityType
 
 
 class ScoreExplanation(BaseModel):
@@ -123,3 +123,21 @@ class IngestionRunRead(BaseModel):
     imported_count: int
     skipped_count: int
     errors: list[str]
+
+
+class ApplicationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    match_id: UUID
+    status: ApplicationStatus
+    packet: dict
+    notes: str | None
+    created_at: datetime
+    updated_at: datetime
+    match: MatchRead
+
+
+class ApplicationUpdate(BaseModel):
+    status: ApplicationStatus | None = None
+    notes: str | None = None

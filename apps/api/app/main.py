@@ -9,11 +9,14 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.db import Base, engine, get_db
 from app.config import get_settings
+from app.application_agent import build_application_packet
 from app.ingestion import import_opportunity, load_sources, run_ingestion
 from app.matching import calculate_match
-from app.models import Company, Match, Opportunity, ResumeProfile
+from app.models import Application, Company, Match, Opportunity, ResumeProfile
 from app.resume_parser import extract_skill_groups, extract_text, parse_resume
 from app.schemas import (
+    ApplicationRead,
+    ApplicationUpdate,
     CompanyRead,
     IngestionRunRead,
     MatchRead,
@@ -218,6 +221,77 @@ def get_match_report(match_id: UUID, db: Session = Depends(get_db)) -> Match:
     if match is None:
         raise HTTPException(status_code=404, detail="Match report not found.")
     return match
+
+
+def _application_query():
+    return (
+        select(Application)
+        .options(
+            joinedload(Application.match)
+            .joinedload(Match.opportunity)
+            .joinedload(Opportunity.company),
+            joinedload(Application.match).joinedload(Match.resume),
+        )
+    )
+
+
+@app.post("/applications/from-match/{match_id}", response_model=ApplicationRead)
+def create_application_from_match(match_id: UUID, db: Session = Depends(get_db)) -> Application:
+    match = db.scalar(
+        select(Match)
+        .options(
+            joinedload(Match.resume),
+            joinedload(Match.opportunity).joinedload(Opportunity.company),
+        )
+        .where(Match.id == match_id)
+    )
+    if match is None:
+        raise HTTPException(status_code=404, detail="Match not found.")
+    application = db.scalar(select(Application).where(Application.match_id == match.id))
+    packet = build_application_packet(match)
+    if application:
+        application.packet = packet
+    else:
+        application = Application(match_id=match.id, packet=packet)
+        db.add(application)
+    db.commit()
+    return db.scalar(_application_query().where(Application.id == application.id))
+
+
+@app.get("/applications", response_model=list[ApplicationRead])
+def list_applications(limit: int = 50, db: Session = Depends(get_db)) -> list[Application]:
+    return list(
+        db.scalars(
+            _application_query()
+            .order_by(desc(Application.updated_at), desc(Application.created_at))
+            .limit(min(limit, 100))
+        ).unique()
+    )
+
+
+@app.get("/applications/{application_id}", response_model=ApplicationRead)
+def get_application(application_id: UUID, db: Session = Depends(get_db)) -> Application:
+    application = db.scalar(_application_query().where(Application.id == application_id))
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found.")
+    return application
+
+
+@app.patch("/applications/{application_id}", response_model=ApplicationRead)
+def update_application(
+    application_id: UUID,
+    payload: ApplicationUpdate,
+    db: Session = Depends(get_db),
+) -> Application:
+    application = db.get(Application, application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found.")
+    if payload.status is not None:
+        application.status = payload.status
+    if payload.notes is not None:
+        application.notes = payload.notes
+    db.commit()
+    return db.scalar(_application_query().where(Application.id == application.id))
 
 
 @app.post("/matches/{match_id}/proposal")

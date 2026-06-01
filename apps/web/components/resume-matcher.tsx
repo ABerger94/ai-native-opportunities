@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, FileUp, RefreshCw } from "lucide-react";
 import { Badge, Button, Score } from "@/components/ui";
+import { CreateApplicationButton } from "@/components/application-actions";
 import type { Match, Resume } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -153,6 +154,7 @@ export function ResumeMatcher() {
                     <MatchList label="Gaps to close" items={[...match.missing_skills, ...match.missing_experience].slice(0, 6)} />
                     <MatchList label="Recommended projects" items={match.recommended_projects} />
                     <div className="mt-4 flex flex-wrap gap-4">
+                      <CreateApplicationButton matchId={match.id} />
                       <Link
                         className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
                         href={`/matches/${match.id}`}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getMatchReport } from "@/lib/api";
+import { CreateApplicationButton } from "@/components/application-actions";
 import { Badge, Score } from "@/components/ui";
 
 type PageProps = {
@@ -48,14 +49,17 @@ export default async function MatchReportPage({ params }: PageProps) {
                 {opportunity.remote ? <Badge>Remote or hybrid</Badge> : null}
               </div>
             </div>
-            <a
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-              href={opportunity.url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Apply on source site <ExternalLink className="h-4 w-4" />
-            </a>
+            <div className="flex flex-wrap gap-3">
+              <CreateApplicationButton matchId={match.id} />
+              <a
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-foreground px-4 text-sm font-medium text-background transition hover:opacity-90"
+                href={opportunity.url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Apply Link <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
           </div>
         </div>
       </header>
