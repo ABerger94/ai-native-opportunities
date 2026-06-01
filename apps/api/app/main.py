@@ -47,6 +47,8 @@ app.add_middleware(
 @app.on_event("startup")
 def startup() -> None:
     try:
+        with engine.begin() as connection:
+            connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         Base.metadata.create_all(bind=engine)
     except Exception as exc:  # noqa: BLE001
         logger.error("database.startup_failed", error=str(exc))
