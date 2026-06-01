@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, Building2, DatabaseZap, RefreshCw } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Building2, RefreshCw } from "lucide-react";
 import { getDashboard } from "@/lib/api";
 import { Badge, Score } from "@/components/ui";
 import { DashboardActions } from "@/components/dashboard-actions";
@@ -30,10 +30,9 @@ export default async function Home() {
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-7xl gap-4 px-6 py-6 md:grid-cols-4">
+      <section className="mx-auto grid max-w-7xl gap-4 px-6 py-6 md:grid-cols-3">
         <Metric icon={<BriefcaseBusiness className="h-5 w-5" />} label="Real Opportunities" value={jobs.length} />
         <Metric icon={<Building2 className="h-5 w-5" />} label="AI Builder Companies" value={companies.length} />
-        <Metric icon={<DatabaseZap className="h-5 w-5" />} label="Mock Records" value={0} />
         <Metric icon={<RefreshCw className="h-5 w-5" />} label="Configured Sources" value={dashboard.configured_source_count ?? 0} />
       </section>
 
