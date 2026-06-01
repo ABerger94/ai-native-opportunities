@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import AnyHttpUrl, Field
+from pydantic import AnyHttpUrl, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +21,21 @@ class Settings(BaseSettings):
     source_config_path: str = "sources.json"
     source_config_json: str | None = None
     crawler_user_agent: str = "AI Native Opportunities Bot (+contact@example.com)"
+
+    @field_validator(
+        "clerk_jwks_url",
+        "supabase_url",
+        "supabase_service_role_key",
+        "openai_api_key",
+        "anthropic_api_key",
+        "source_config_json",
+        mode="before",
+    )
+    @classmethod
+    def empty_string_to_none(cls, value: object) -> object:
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
 
 
 @lru_cache

@@ -18,7 +18,11 @@ def normalize_database_url(url: str) -> str:
     return url
 
 
-engine = create_engine(normalize_database_url(get_settings().database_url), pool_pre_ping=True)
+engine = create_engine(
+    normalize_database_url(get_settings().database_url),
+    pool_pre_ping=True,
+    connect_args={"connect_timeout": 5},
+)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 

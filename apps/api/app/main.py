@@ -3,6 +3,7 @@ from uuid import UUID
 import structlog
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session, joinedload
 
@@ -45,12 +46,25 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup() -> None:
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("database.startup_failed", error=str(exc))
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/health/db")
+def health_db() -> dict[str, str]:
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("select 1"))
+        return {"status": "ok"}
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"Database unavailable: {exc}") from exc
 
 
 @app.get("/opportunities", response_model=list[OpportunityRead])
