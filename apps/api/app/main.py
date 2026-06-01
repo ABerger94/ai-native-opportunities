@@ -208,6 +208,18 @@ def list_matches(resume_id: UUID, limit: int = 50, db: Session = Depends(get_db)
     )
 
 
+@app.get("/match-reports/{match_id}", response_model=MatchRead)
+def get_match_report(match_id: UUID, db: Session = Depends(get_db)) -> Match:
+    match = db.scalar(
+        select(Match)
+        .options(joinedload(Match.opportunity).joinedload(Opportunity.company))
+        .where(Match.id == match_id)
+    )
+    if match is None:
+        raise HTTPException(status_code=404, detail="Match report not found.")
+    return match
+
+
 @app.post("/matches/{match_id}/proposal")
 def generate_proposal(match_id: UUID, db: Session = Depends(get_db)) -> dict[str, str | list[str]]:
     match = db.scalar(

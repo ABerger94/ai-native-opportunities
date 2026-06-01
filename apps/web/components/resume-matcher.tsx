@@ -152,12 +152,20 @@ export function ResumeMatcher() {
                     <MatchList label="Strong alignment" items={match.explanation.positive_signals ?? []} />
                     <MatchList label="Gaps to close" items={[...match.missing_skills, ...match.missing_experience].slice(0, 6)} />
                     <MatchList label="Recommended projects" items={match.recommended_projects} />
-                    <Link
-                      className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-                      href={`/opportunities/${match.opportunity.id}`}
-                    >
-                      Open opportunity profile <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    <div className="mt-4 flex flex-wrap gap-4">
+                      <Link
+                        className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                        href={`/matches/${match.id}`}
+                      >
+                        View capability report <ArrowRight className="h-4 w-4" />
+                      </Link>
+                      <Link
+                        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:underline"
+                        href={`/opportunities/${match.opportunity.id}`}
+                      >
+                        Open opportunity profile <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
                   </div>
                   <div className="grid content-start gap-3">
                     <Score label="Overall Match" value={match.overall_match_score} />
