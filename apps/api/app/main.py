@@ -137,7 +137,11 @@ async def upload_resume(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if not text:
         raise HTTPException(status_code=400, detail="Resume did not contain extractable text.")
-    storage_path = await store_resume_file(user_id, file.filename or "resume", content)
+    try:
+        storage_path = await store_resume_file(user_id, file.filename or "resume", content)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("resume.storage_failed", error=str(exc))
+        storage_path = None
 
     skill_groups = extract_skill_groups(text)
     resume = ResumeProfile(

@@ -87,6 +87,85 @@
       "enabled": true,
       "company_name": "Scale AI",
       "permission_note": "Public Greenhouse board API endpoint."
+    },
+    {
+      "name": "perplexity-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/perplexity",
+      "enabled": true,
+      "company_name": "Perplexity",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "modal-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/modal",
+      "enabled": true,
+      "company_name": "Modal",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "runway-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/runway",
+      "enabled": true,
+      "company_name": "Runway",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "character-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/character",
+      "enabled": true,
+      "company_name": "Character.AI",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "sierra-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/sierra",
+      "enabled": true,
+      "company_name": "Sierra",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "synthesia-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/synthesia",
+      "enabled": true,
+      "company_name": "Synthesia",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    },
+    {
+      "name": "descript-greenhouse",
+      "kind": "greenhouse",
+      "url": "https://boards-api.greenhouse.io/v1/boards/descript/jobs?content=true",
+      "enabled": true,
+      "company_name": "Descript",
+      "permission_note": "Public Greenhouse board API endpoint."
+    },
+    {
+      "name": "togetherai-greenhouse",
+      "kind": "greenhouse",
+      "url": "https://boards-api.greenhouse.io/v1/boards/togetherai/jobs?content=true",
+      "enabled": true,
+      "company_name": "Together AI",
+      "permission_note": "Public Greenhouse board API endpoint."
+    },
+    {
+      "name": "mistral-lever",
+      "kind": "lever",
+      "url": "https://api.lever.co/v0/postings/mistral?mode=json",
+      "enabled": true,
+      "company_name": "Mistral AI",
+      "permission_note": "Public Lever postings API endpoint."
+    },
+    {
+      "name": "remoteok-public-api",
+      "kind": "json",
+      "url": "https://remoteok.com/api",
+      "enabled": true,
+      "permission_note": "Public RemoteOK API endpoint."
     }
   ]
 }
