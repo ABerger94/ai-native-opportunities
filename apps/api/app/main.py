@@ -221,8 +221,12 @@ def dashboard(db: Session = Depends(get_db)) -> dict:
     top_jobs = list_opportunities(min_ai_score=70, limit=10, db=db)
     companies = list_companies(limit=10, db=db)
     return {
-        "top_ai_native_jobs": top_jobs,
-        "trending_companies": companies,
+        "top_ai_native_jobs": [
+            OpportunityRead.model_validate(job).model_dump(mode="json") for job in top_jobs
+        ],
+        "trending_companies": [
+            CompanyRead.model_validate(company).model_dump(mode="json") for company in companies
+        ],
         "empty_state": {
             "has_real_data": bool(top_jobs or companies),
             "message": "No opportunities are shown until compliant real sources are configured and ingestion has run.",
