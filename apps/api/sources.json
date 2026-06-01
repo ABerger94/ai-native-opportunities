@@ -1,0 +1,20 @@
+{
+  "sources": [
+    {
+      "name": "anthropic-greenhouse",
+      "kind": "greenhouse",
+      "url": "https://boards-api.greenhouse.io/v1/boards/anthropic/jobs?content=true",
+      "enabled": true,
+      "company_name": "Anthropic",
+      "permission_note": "Public Greenhouse board API endpoint."
+    },
+    {
+      "name": "openai-ashby",
+      "kind": "ashby",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/openai",
+      "enabled": true,
+      "company_name": "OpenAI",
+      "permission_note": "Public Ashby job board posting API endpoint."
+    }
+  ]
+}

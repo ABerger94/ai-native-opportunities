@@ -218,7 +218,7 @@ def generate_proposal(match_id: UUID, db: Session = Depends(get_db)) -> dict[str
 
 @app.get("/dashboard")
 def dashboard(db: Session = Depends(get_db)) -> dict:
-    top_jobs = list_opportunities(min_ai_score=70, limit=10, db=db)
+    top_jobs = list_opportunities(min_ai_score=0, limit=10, db=db)
     companies = list_companies(limit=10, db=db)
     return {
         "top_ai_native_jobs": [
